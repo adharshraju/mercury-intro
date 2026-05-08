@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MERCURY // PLAYER ONE</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23a855f7'/><stop offset='1' stop-color='%2322d3ee'/></linearGradient></defs><rect width='32' height='32' rx='6' fill='%23080810'/><path d='M5 27L5 5L16 18L27 5L27 27' stroke='url(%23g)' stroke-width='5' fill='none' stroke-linejoin='miter' stroke-linecap='square'/></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #08080f;
+      --card: #0e0e1f;
+      --border: #1a1a3e;
+      --purple: #a855f7;
+      --cyan: #22d3ee;
+      --green: #4ade80;
+      --red: #f87171;
+      --gold: #fbbf24;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+    }
+
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      overflow-x: hidden;
+      background-image:
+        linear-gradient(rgba(168,85,247,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,211,238,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    /* NAVBAR */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 64px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem;
+      background: rgba(8, 8, 15, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: 'Orbitron', monospace; font-weight: 900;
+      font-size: 1.05rem;
+      color: var(--purple);
+      text-shadow: 0 0 20px var(--purple);
+      letter-spacing: 2px;
+    }
+    .nav-links { display: flex; gap: 2rem; list-style: none; }
+    .nav-links a {
+      color: var(--muted); text-decoration: none;
+      font-size: 0.72rem; letter-spacing: 2px; text-transform: uppercase;
+      transition: color 0.2s, text-shadow 0.2s;
+    }
+    .nav-links a:hover { color: var(--cyan); text-shadow: 0 0 10px var(--cyan); }
+    .status-badge {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-size: 0.68rem; letter-spacing: 1px;
+      padding: 0.35rem 0.85rem; border-radius: 9999px;
+      border: 1px solid rgba(74,222,128,0.4);
+      color: var(--green);
+      transition: color 0.5s ease, border-color 0.5s ease;
+      white-space: nowrap;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: currentColor; animation: pulse 1.6s infinite;
+      box-shadow: 0 0 8px currentColor;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.45; transform: scale(0.75); }
+    }
+
+    /* HERO */
+    .hero {
+      position: relative; height: 100vh; min-height: 600px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    #particles { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .hero::after {
+      content: ''; position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 2px,
+        rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 4px
+      );
+      pointer-events: none; z-index: 1;
+    }
+    .hero-content { position: relative; z-index: 2; text-align: center; padding: 0 1rem; }
+    .pre-tag {
+      font-size: 0.72rem; color: var(--cyan);
+      letter-spacing: 4px; text-transform: uppercase; margin-bottom: 1rem;
+    }
+
+    /* GLITCH TEXT */
+    .glitch {
+      font-family: 'Orbitron', monospace; font-weight: 900;
+      font-size: clamp(3.5rem, 12vw, 9rem);
+      color: var(--purple);
+      text-shadow: 0 0 30px rgba(168,85,247,0.8), 0 0 60px rgba(168,85,247,0.4);
+      position: relative; display: inline-block;
+      cursor: pointer; letter-spacing: 8px;
+      animation: glitch-idle 8s infinite;
+      user-select: none;
+    }
+    .glitch::before, .glitch::after {
+      content: attr(data-text);
+      position: absolute; top: 0; left: 0;
+      width: 100%; height: 100%;
+    }
+    .glitch::before {
+      color: var(--cyan); clip-path: inset(0 0 100% 0);
+      animation: glitch-top 8s infinite;
+    }
+    .glitch::after {
+      color: var(--red); clip-path: inset(0 0 100% 0);
+      animation: glitch-bottom 8s 0.1s infinite;
+    }
+    @keyframes glitch-top {
+      0%, 89%, 95%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+      90% { clip-path: inset(5%  0 80% 0); transform: translate(-5px,0); }
+      91% { clip-path: inset(20% 0 60% 0); transform: translate(5px,0); }
+      92% { clip-path: inset(50% 0 30% 0); transform: translate(-3px,0); }
+      93% { clip-path: inset(80% 0 10% 0); transform: translate(3px,0); }
+    }
+    @keyframes glitch-bottom {
+      0%, 89%, 95%, 100% { clip-path: inset(0 0 100% 0); transform: translate(0); }
+      90% { clip-path: inset(70% 0 5%  0); transform: translate(5px,0); }
+      91% { clip-path: inset(40% 0 25% 0); transform: translate(-5px,0); }
+      92% { clip-path: inset(10% 0 60% 0); transform: translate(3px,0); }
+      93% { clip-path: inset(85% 0 2%  0); transform: translate(-3px,0); }
+    }
+    @keyframes glitch-idle {
+      0%, 89%, 100% { text-shadow: 0 0 30px rgba(168,85,247,0.8), 0 0 60px rgba(168,85,247,0.4); }
+      90% { text-shadow: 2px 0 #22d3ee, -2px 0 #f87171, 0 0 30px rgba(168,85,247,0.8); }
+      92% { text-shadow: -2px 0 #22d3ee, 2px 0 #f87171, 0 0 30px rgba(168,85,247,0.8); }
+    }
+    /* Click-triggered intense glitch */
+    .glitch.glitching::before { animation: glitch-burst-top 0.65s steps(1) forwards; }
+    .glitch.glitching::after  { animation: glitch-burst-bot 0.65s steps(1) forwards; }
+    @keyframes glitch-burst-top {
+      0%   { clip-path: inset(10% 0 60% 0); transform: translate(-10px,0); }
+      15%  { clip-path: inset(40% 0 30% 0); transform: translate(10px,0); }
+      30%  { clip-path: inset(70% 0 5%  0); transform: translate(-7px,0); }
+      45%  { clip-path: inset(20% 0 50% 0); transform: translate(7px,0); }
+      60%  { clip-path: inset(55% 0 20% 0); transform: translate(-10px,0); }
+      75%  { clip-path: inset(85% 0 3%  0); transform: translate(10px,0); }
+      100% { clip-path: inset(0   0 100% 0); transform: translate(0); }
+    }
+    @keyframes glitch-burst-bot {
+      0%   { clip-path: inset(65% 0 5%  0); transform: translate(10px,0); }
+      15%  { clip-path: inset(25% 0 45% 0); transform: translate(-10px,0); }
+      30%  { clip-path: inset(80% 0 3%  0); transform: translate(7px,0); }
+      45%  { clip-path: inset(45% 0 25% 0); transform: translate(-7px,0); }
+      60%  { clip-path: inset(10% 0 65% 0); transform: translate(10px,0); }
+      75%  { clip-path: inset(90% 0 2%  0); transform: translate(-10px,0); }
+      100% { clip-path: inset(0   0 100% 0); transform: translate(0); }
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: clamp(0.75rem, 1.6vw, 1rem);
+      margin-top: 1.5rem; letter-spacing: 2px;
+    }
+    .hero-buttons {
+      display: flex; gap: 1rem; margin-top: 2.5rem;
+      justify-content: center; flex-wrap: wrap;
+    }
+    .btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem; letter-spacing: 2px; text-transform: uppercase;
+      padding: 0.8rem 1.6rem;
+      border: 1px solid; background: transparent;
+      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    }
+    .btn-primary   { color: var(--purple); border-color: var(--purple); }
+    .btn-primary:hover   { background: rgba(168,85,247,0.15); box-shadow: 0 0 22px rgba(168,85,247,0.4); }
+    .btn-secondary { color: var(--cyan); border-color: var(--cyan); }
+    .btn-secondary:hover { background: rgba(34,211,238,0.15); box-shadow: 0 0 22px rgba(34,211,238,0.4); }
+
+    .scroll-hint {
+      position: absolute; bottom: 2rem; left: 50%;
+      transform: translateX(-50%); z-index: 2;
+      color: var(--muted); font-size: 0.62rem; letter-spacing: 3px;
+      animation: bounce 2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateX(-50%) translateY(0); }
+      50%      { transform: translateX(-50%) translateY(8px); }
+    }
+
+    /* SECTIONS */
+    section { max-width: 1200px; margin: 0 auto; padding: 80px 2rem; }
+    .section-wrapper { border-top: 1px solid var(--border); position: relative; }
+    .section-label {
+      font-size: 0.68rem; color: var(--cyan);
+      letter-spacing: 4px; text-transform: uppercase; margin-bottom: 0.5rem;
+    }
+    .section-title {
+      font-family: 'Orbitron', monospace; font-weight: 700;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      color: var(--text); margin-bottom: 3rem;
+      position: relative; display: inline-block;
+    }
+    .section-title::after {
+      content: ''; position: absolute; bottom: -8px; left: 0;
+      width: 60px; height: 2px;
+      background: var(--purple); box-shadow: 0 0 10px var(--purple);
+    }
+
+    /* GAME CARDS */
+    .games-grid {
+      display: grid; gap: 1.5rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+    .game-card {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 1.5rem; position: relative; overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    }
+    .game-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0;
+      height: 2px; background: var(--card-accent, var(--purple));
+      transition: box-shadow 0.3s;
+    }
+    .game-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--card-accent, var(--purple));
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5),
+                  0 0 22px var(--card-glow, rgba(168,85,247,0.3));
+    }
+    .game-card:hover::before { box-shadow: 0 0 15px var(--card-accent, var(--purple)); }
+    .game-icon { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+    .game-name {
+      font-family: 'Orbitron', monospace; font-weight: 700;
+      font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+    }
+    .game-hours { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.75rem; }
+    .game-hours span { color: var(--card-accent, var(--purple)); font-weight: 700; }
+    .game-status {
+      font-size: 0.8rem; color: var(--muted); font-style: italic;
+      border-top: 1px solid var(--border); padding-top: 0.75rem; margin-top: 0.75rem;
+    }
+    .game-tags { display: flex; gap: 0.5rem; margin-top: 0.75rem; flex-wrap: wrap; }
+    .tag {
+      font-size: 0.58rem; letter-spacing: 1px; padding: 0.2rem 0.5rem;
+      border: 1px solid var(--card-accent, var(--purple));
+      color: var(--card-accent, var(--purple));
+      text-transform: uppercase;
+    }
+
+    /* ACHIEVEMENTS */
+    .achievements-grid {
+      display: grid; gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    }
+    .badge {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 1rem 1.25rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-left: 3px solid var(--badge-color, var(--purple));
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .badge:hover {
+      transform: translateX(4px);
+      box-shadow: -4px 0 22px var(--badge-glow, rgba(168,85,247,0.3));
+    }
+    .badge-icon { font-size: 1.5rem; flex-shrink: 0; }
+    .badge-text { font-size: 0.85rem; color: var(--text); line-height: 1.4; }
+    .badge-sub  { font-size: 0.68rem; color: var(--muted); margin-top: 0.25rem; }
+
+    /* STATS */
+    .stats-grid {
+      display: grid; gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border);
+      padding: 1.25rem 1.5rem; position: relative; overflow: hidden;
+      transition: border-color 0.3s;
+    }
+    .stat-card::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: var(--stat-color, var(--purple));
+      transform: scaleX(0); transform-origin: left;
+      transition: transform 0.5s ease, box-shadow 0.5s ease;
+    }
+    .stat-card:hover { border-color: var(--stat-color, var(--purple)); }
+    .stat-card:hover::after {
+      transform: scaleX(1);
+      box-shadow: 0 0 10px var(--stat-color, var(--purple));
+    }
+    .stat-label {
+      font-size: 0.62rem; color: var(--muted);
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 0.5rem;
+    }
+    .stat-value {
+      font-family: 'Orbitron', monospace; font-weight: 700;
+      font-size: 1.8rem; line-height: 1;
+      color: var(--stat-color, var(--purple));
+      text-shadow: 0 0 14px var(--stat-color, rgba(168,85,247,0.5));
+    }
+    .stat-note { font-size: 0.62rem; color: var(--muted); margin-top: 0.4rem; }
+
+    /* FUN FACTS */
+    .facts-grid { display: flex; flex-wrap: wrap; gap: 1rem; }
+    .fact-pill {
+      display: flex; align-items: center; gap: 0.6rem;
+      padding: 0.75rem 1.25rem;
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 4px; font-size: 0.85rem; color: var(--text);
+      transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+    }
+    .fact-pill:hover {
+      border-color: var(--purple);
+      box-shadow: 0 0 15px rgba(168,85,247,0.25);
+      transform: translateY(-2px);
+    }
+    .fact-icon { font-size: 1.2rem; flex-shrink: 0; }
+
+    /* FOOTER */
+    footer {
+      background: #050509; border-top: 1px solid var(--border);
+      padding: 4rem 2rem 2rem; text-align: center;
+    }
+    .footer-title {
+      font-family: 'Orbitron', monospace; font-weight: 900;
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      color: var(--purple); text-shadow: 0 0 20px rgba(168,85,247,0.5);
+      margin-bottom: 0.5rem; letter-spacing: 2px;
+    }
+    .footer-sub { color: var(--muted); font-size: 0.72rem; margin-bottom: 2rem; letter-spacing: 1px; }
+    .social-links {
+      display: flex; justify-content: center; gap: 1.5rem;
+      flex-wrap: wrap; margin-bottom: 3rem;
+    }
+    .social-link {
+      display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+      text-decoration: none; padding: 1.2rem 1.5rem;
+      background: var(--card); border: 1px solid var(--border);
+      transition: all 0.2s; min-width: 160px;
+    }
+    .social-link:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 22px rgba(34,211,238,0.3);
+      transform: translateY(-3px);
+    }
+    .social-platform {
+      font-size: 0.62rem; color: var(--muted);
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+    .social-icon { font-size: 1.6rem; }
+    .social-handle { font-size: 0.78rem; color: var(--cyan); word-break: break-all; }
+    .footer-copy {
+      color: var(--muted); font-size: 0.62rem; letter-spacing: 2px;
+      border-top: 1px solid var(--border); padding-top: 1.5rem;
+    }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--purple); }
+
+    @media (max-width: 768px) {
+      nav { padding: 0 1rem; }
+      .nav-links { display: none; }
+      section { padding: 60px 1rem; }
+      .glitch { letter-spacing: 4px; }
+    }
+    @media (max-width: 480px) {
+      .nav-logo { font-size: 0.85rem; }
+      .status-badge { font-size: 0.55rem; padding: 0.25rem 0.6rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="nav-logo">[MERCURY]</div>
+    <ul class="nav-links">
+      <li><a href="#games">GAMES</a></li>
+      <li><a href="#achievements">ACHIEVEMENTS</a></li>
+      <li><a href="#stats">STATS</a></li>
+      <li><a href="#facts">FUN FACTS</a></li>
+    </ul>
+    <div class="status-badge" id="statusBadge">
+      <span class="status-dot"></span>
+      <span id="statusText">ONLINE</span>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <div class="hero" id="hero">
+    <canvas id="particles"></canvas>
+    <div class="hero-content">
+      <p class="pre-tag">// PLAYER ONE //</p>
+      <h1 class="glitch" id="glitch" data-text="MERCURY">MERCURY</h1>
+      <p class="tagline">Carrying teams since 2018 &nbsp;·&nbsp; Solo queue survivor &nbsp;·&nbsp; Blames the server</p>
+      <div class="hero-buttons">
+        <a href="#stats" class="btn btn-primary">[VIEW STATS]</a>
+        <a href="#footer" class="btn btn-secondary">[CONNECT]</a>
+      </div>
+    </div>
+    <div class="scroll-hint">▼ SCROLL DOWN ▼</div>
+  </div>
+
+  <!-- GAMES -->
+  <div class="section-wrapper" id="games">
+    <section>
+      <p class="section-label">// CURRENT ROTATION</p>
+      <h2 class="section-title">GAMES I PLAY</h2>
+      <div class="games-grid">
+
+        <div class="game-card" style="--card-accent:#ef4444; --card-glow:rgba(239,68,68,0.3);">
+          <span class="game-icon">⚔️</span>
+          <div class="game-name">VALORANT</div>
+          <div class="game-hours">Hours played: <span>2,340</span></div>
+          <div class="game-status">"Platinum rank. Entry fragger who definitely doesn't die first."</div>
+          <div class="game-tags">
+            <span class="tag">FPS</span>
+            <span class="tag">COMPETITIVE</span>
+            <span class="tag">TACTICAL</span>
+          </div>
+        </div>
+
+        <div class="game-card" style="--card-accent:#fbbf24; --card-glow:rgba(251,191,36,0.3);">
+          <span class="game-icon">💀</span>
+          <div class="game-name">ELDEN RING</div>
+          <div class="game-hours">Hours played: <span>1,337</span></div>
+          <div class="game-status">"Still stuck on Malenia. It's fine. I'm fine. Everything is fine."</div>
+          <div class="game-tags">
+            <span class="tag">RPG</span>
+            <span class="tag">SOULS-LIKE</span>
+            <span class="tag">PAIN</span>
+          </div>
+        </div>
+
+        <div class="game-card" style="--card-accent:#f97316; --card-glow:rgba(249,115,22,0.3);">
+          <span class="game-icon">🚀</span>
+          <div class="game-name">ROCKET LEAGUE</div>
+          <div class="game-hours">Hours played: <span>890</span></div>
+          <div class="game-status">"Diamond I. Almost Champion. Almost."</div>
+          <div class="game-tags">
+            <span class="tag">SPORTS</span>
+            <span class="tag">RANKED</span>
+            <span class="tag">CARS</span>
+          </div>
+        </div>
+
+        <div class="game-card" style="--card-accent:#4ade80; --card-glow:rgba(74,222,128,0.3);">
+          <span class="game-icon">🌱</span>
+          <div class="game-name">MINECRAFT</div>
+          <div class="game-hours">Hours played: <span>560</span></div>
+          <div class="game-status">"Survival only. No creative. It's about the journey."</div>
+          <div class="game-tags">
+            <span class="tag">SANDBOX</span>
+            <span class="tag">SURVIVAL</span>
+            <span class="tag">CHILL</span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </div>
+
+  <!-- ACHIEVEMENTS -->
+  <div class="section-wrapper" id="achievements">
+    <section>
+      <p class="section-label">// HALL OF FAME</p>
+      <h2 class="section-title">ACHIEVEMENTS</h2>
+      <div class="achievements-grid">
+        <div class="badge" style="--badge-color:#fbbf24; --badge-glow:rgba(251,191,36,0.35);">
+          <span class="badge-icon">🏆</span>
+          <div>
+            <div class="badge-text">1,337 Hours in Elden Ring</div>
+            <div class="badge-sub">Still no Platinum. Send help.</div>
+          </div>
+        </div>
+        <div class="badge" style="--badge-color:#22d3ee; --badge-glow:rgba(34,211,238,0.35);">
+          <span class="badge-icon">🎯</span>
+          <div>
+            <div class="badge-text">Platinum Rank — Valorant</div>
+            <div class="badge-sub">Earned it. Lost it. Earned it again.</div>
+          </div>
+        </div>
+        <div class="badge" style="--badge-color:#a855f7; --badge-glow:rgba(168,85,247,0.35);">
+          <span class="badge-icon">🚀</span>
+          <div>
+            <div class="badge-text">World Record Attempt — Rocket League</div>
+            <div class="badge-sub">Didn't break it. Came 47th. Counts.</div>
+          </div>
+        </div>
+        <div class="badge" style="--badge-color:#4ade80; --badge-glow:rgba(74,222,128,0.35);">
+          <span class="badge-icon">👾</span>
+          <div>
+            <div class="badge-text">Survived 100 Creeper Explosions</div>
+            <div class="badge-sub">Not in a row. But who's counting.</div>
+          </div>
+        </div>
+        <div class="badge" style="--badge-color:#f87171; --badge-glow:rgba(248,113,113,0.35);">
+          <span class="badge-icon">💀</span>
+          <div>
+            <div class="badge-text">Died to Malenia 47 Times</div>
+            <div class="badge-sub">She heals. I suffer. It's content.</div>
+          </div>
+        </div>
+        <div class="badge" style="--badge-color:#94a3b8; --badge-glow:rgba(148,163,184,0.35);">
+          <span class="badge-icon">🎮</span>
+          <div>
+            <div class="badge-text">Never Used a Guide (Lied)</div>
+            <div class="badge-sub">Checked one wiki. Just one.</div>
+          </div>
+        </div>
+        <div class="badge" style="--badge-color:#fbbf24; --badge-glow:rgba(251,191,36,0.35);">
+          <span class="badge-icon">⚡</span>
+          <div>
+            <div class="badge-text">Sub-100ms Reaction Time</div>
+            <div class="badge-sub">Recorded once. Never reproduced.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- STATS -->
+  <div class="section-wrapper" id="stats">
+    <section>
+      <p class="section-label">// SYSTEM DIAGNOSTICS</p>
+      <h2 class="section-title">STATS PANEL</h2>
+      <div class="stats-grid">
+        <div class="stat-card" style="--stat-color:#22d3ee;">
+          <div class="stat-label">K/D RATIO</div>
+          <div class="stat-value" data-target="1.87" data-decimals="2">0.00</div>
+          <div class="stat-note">Across all shooters</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#4ade80;">
+          <div class="stat-label">WIN RATE</div>
+          <div class="stat-value" data-target="61" data-suffix="%">0%</div>
+          <div class="stat-note">When I try</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#a855f7;">
+          <div class="stat-label">HOURS PLAYED</div>
+          <div class="stat-value" data-target="4200" data-suffix="+">0+</div>
+          <div class="stat-note">Total lifetime</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#fbbf24;">
+          <div class="stat-label">HEADSHOT %</div>
+          <div class="stat-value" data-target="34" data-suffix="%">0%</div>
+          <div class="stat-note">Valorant only</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#f87171;">
+          <div class="stat-label">RAGE QUITS</div>
+          <div class="stat-value" data-target="3">0</div>
+          <div class="stat-note">This week alone</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#22d3ee;">
+          <div class="stat-label">LONGEST SESSION</div>
+          <div class="stat-value" style="font-size:1.4rem;">14h 23m</div>
+          <div class="stat-note">No breaks. No regrets.</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#a855f7;">
+          <div class="stat-label">FAVOURITE ROLE</div>
+          <div class="stat-value" style="font-size:1.1rem; padding-top:0.4rem;">DUELIST</div>
+          <div class="stat-note">Carry or cry trying</div>
+        </div>
+        <div class="stat-card" style="--stat-color:#f87171;">
+          <div class="stat-label">BLAMES TEAMMATES</div>
+          <div class="stat-value" data-target="100" data-suffix="%">0%</div>
+          <div class="stat-note">Statistically accurate</div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FUN FACTS -->
+  <div class="section-wrapper" id="facts">
+    <section>
+      <p class="section-label">// CLASSIFIED DATA</p>
+      <h2 class="section-title">FUN FACTS</h2>
+      <div class="facts-grid">
+        <div class="fact-pill"><span class="fact-icon">🌙</span> Plays exclusively after midnight</div>
+        <div class="fact-pill"><span class="fact-icon">🖱️</span> Owns 3 mice "for different moods"</div>
+        <div class="fact-pill"><span class="fact-icon">💺</span> Has 3 gaming chairs (still uncomfortable)</div>
+        <div class="fact-pill"><span class="fact-icon">📡</span> Blames lag even on LAN</div>
+        <div class="fact-pill"><span class="fact-icon">☕</span> Fuelled entirely by energy drinks</div>
+        <div class="fact-pill"><span class="fact-icon">🎧</span> Music louder than game audio</div>
+        <div class="fact-pill"><span class="fact-icon">🔇</span> Mutes mic, then yells anyway</div>
+        <div class="fact-pill"><span class="fact-icon">💤</span> "One more game" — said at 4am</div>
+        <div class="fact-pill"><span class="fact-icon">🛒</span> 47 unplayed Steam games</div>
+        <div class="fact-pill"><span class="fact-icon">📉</span> Always requeues after a loss</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- FOOTER -->
+  <footer id="footer">
+    <div class="footer-title">MERCURY // PLAYER ONE</div>
+    <div class="footer-sub">// ready to frag · discord open · coffee hot</div>
+    <div class="social-links">
+      <a class="social-link" href="#" onclick="return false;">
+        <span class="social-platform">TWITCH</span>
+        <span class="social-icon">📺</span>
+        <span class="social-handle">twitch.tv/mercury</span>
+      </a>
+      <a class="social-link" href="#" onclick="return false;">
+        <span class="social-platform">DISCORD</span>
+        <span class="social-icon">💬</span>
+        <span class="social-handle">mercury#0001</span>
+      </a>
+      <a class="social-link" href="#" onclick="return false;">
+        <span class="social-platform">STEAM</span>
+        <span class="social-icon">🎮</span>
+        <span class="social-handle">steamcommunity.com/id/mercury</span>
+      </a>
+    </div>
+    <div class="footer-copy">© 2026 MERCURY · ALL FRAGS RESERVED · BUILT IN THE VOID BETWEEN RANKED GAMES</div>
+  </footer>
+
+  <script>
+    // ─── PARTICLE CANVAS ─────────────────────────────────────────────────
+    (function () {
+      const canvas = document.getElementById('particles');
+      const ctx = canvas.getContext('2d');
+      function resize() {
+        canvas.width  = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      const COUNT = 70, LINK = 130;
+      const particles = Array.from({ length: COUNT }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        vx: (Math.random() - 0.5) * 0.4,
+        vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 1.5 + 0.5,
+        hue: Math.random() > 0.5 ? 280 : 190,
+      }));
+
+      function tick() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const d = Math.sqrt(dx * dx + dy * dy);
+            if (d < LINK) {
+              const a = (1 - d / LINK) * 0.4;
+              const h = (particles[i].hue + particles[j].hue) / 2;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `hsla(${h}, 80%, 65%, ${a})`;
+              ctx.lineWidth = 0.6;
+              ctx.stroke();
+            }
+          }
+        }
+
+        particles.forEach(p => {
+          p.x += p.vx; p.y += p.vy;
+          if (p.x < 0 || p.x > canvas.width)  p.vx *= -1;
+          if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `hsl(${p.hue}, 80%, 70%)`;
+          ctx.shadowBlur = 8;
+          ctx.shadowColor = `hsl(${p.hue}, 80%, 70%)`;
+          ctx.fill();
+          ctx.shadowBlur = 0;
+        });
+
+        requestAnimationFrame(tick);
+      }
+      tick();
+    })();
+
+    // ─── GLITCH ON CLICK ─────────────────────────────────────────────────
+    const glitch = document.getElementById('glitch');
+    glitch.addEventListener('click', () => {
+      glitch.classList.remove('glitching');
+      void glitch.offsetWidth; // reflow
+      glitch.classList.add('glitching');
+      setTimeout(() => glitch.classList.remove('glitching'), 700);
+    });
+
+    // ─── STATUS CYCLER ───────────────────────────────────────────────────
+    const statuses = [
+      { text: 'ONLINE',                    color: '#4ade80', border: 'rgba(74,222,128,0.45)' },
+      { text: '▶ IN GAME — VALORANT',      color: '#22d3ee', border: 'rgba(34,211,238,0.45)' },
+      { text: '◌ AFK — BRB',               color: '#fbbf24', border: 'rgba(251,191,36,0.45)' },
+      { text: '▶ IN GAME — ROCKET LEAGUE', color: '#a855f7', border: 'rgba(168,85,247,0.45)' },
+      { text: '◉ STREAMING',               color: '#f87171', border: 'rgba(248,113,113,0.45)' },
+    ];
+    let sIdx = 0;
+    const badge = document.getElementById('statusBadge');
+    const sText = document.getElementById('statusText');
+    setInterval(() => {
+      sIdx = (sIdx + 1) % statuses.length;
+      const s = statuses[sIdx];
+      badge.style.color = s.color;
+      badge.style.borderColor = s.border;
+      sText.textContent = s.text;
+    }, 4000);
+
+    // ─── STAT COUNT-UP ───────────────────────────────────────────────────
+    let counted = false;
+    const statsObs = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && !counted) {
+        counted = true;
+        document.querySelectorAll('[data-target]').forEach(el => {
+          const target   = parseFloat(el.dataset.target);
+          const decimals = parseInt(el.dataset.decimals || '0');
+          const suffix   = el.dataset.suffix || '';
+          const start = performance.now();
+          const dur = 1500;
+          (function step(now) {
+            const t = Math.min((now - start) / dur, 1);
+            const e = 1 - Math.pow(1 - t, 3);
+            el.textContent = (e * target).toFixed(decimals) + suffix;
+            if (t < 1) requestAnimationFrame(step);
+          })(start);
+        });
+      }
+    }, { threshold: 0.25 });
+    statsObs.observe(document.getElementById('stats'));
+
+    // ─── NAV ACTIVE LINK ─────────────────────────────────────────────────
+    const navLinks = document.querySelectorAll('.nav-links a');
+    const navObs = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          navLinks.forEach(a => {
+            const active = a.getAttribute('href') === '#' + entry.target.id;
+            a.style.color = active ? '#22d3ee' : '';
+            a.style.textShadow = active ? '0 0 10px #22d3ee' : '';
+          });
+        }
+      });
+    }, { threshold: 0.4 });
+    ['games','achievements','stats','facts'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) navObs.observe(el);
+    });
+  </script>
+</body>
+</html>
