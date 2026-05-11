@@ -11,5 +11,5 @@ desktop.ini
 # Logs
 *.log
 
-# Local Claude harness settings (keep launch.json shared)
-.claude/settings*.json
+# Claude Code project folder (editor/tool config, not part of the site)
+.claude/
