@@ -74,6 +74,9 @@ nav {
   background: currentColor; animation: pulse 1.6s infinite;
   box-shadow: 0 0 8px currentColor;
 }
+/* When admin is logged in, badge becomes clickable to open the status picker */
+.status-badge.is-admin        { cursor: pointer; }
+.status-badge.is-admin:hover  { filter: brightness(1.25); box-shadow: 0 0 12px currentColor; }
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%      { opacity: 0.45; transform: scale(0.75); }

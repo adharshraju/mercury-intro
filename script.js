@@ -183,16 +183,29 @@ statusCycler = (function initStatusCycler() {
     { label: '◉ STREAMING',   text: '◉ STREAMING',  color: '#f87171', border: 'rgba(248,113,113,0.45)' },
   ];
 
+  const badgeEl = document.getElementById('statusBadge');
+
   // Apply any pinned status immediately on load
   applySavedStatus();
+  refreshBadgeAdminState();
 
-  // Ctrl+Shift+L toggles login / logout modal
+  // Ctrl+Alt+L toggles login / logout modal
+  // (Ctrl+Shift+L is reserved by Chrome on Windows — focuses the omnibox)
   document.addEventListener('keydown', e => {
-    if (e.ctrlKey && e.shiftKey && e.key === 'L') {
+    if (e.ctrlKey && e.altKey && !e.shiftKey && e.code === 'KeyL') {
       e.preventDefault();
       isLoggedIn() ? showLogoutModal() : showLoginModal();
     }
   });
+
+  // Click the status badge to open the admin panel (only when logged in)
+  badgeEl?.addEventListener('click', () => {
+    if (isLoggedIn()) showAdminPanel();
+  });
+
+  function refreshBadgeAdminState() {
+    badgeEl?.classList.toggle('is-admin', isLoggedIn());
+  }
 
   // ── Helpers ───────────────────────────────────────────────
   function isLoggedIn() {
@@ -228,6 +241,13 @@ statusCycler = (function initStatusCycler() {
     statusCycler.start();
   }
 
+  function logout() {
+    sessionStorage.removeItem(AUTH_KEY);
+    const afk = ADMIN_STATUSES.find(s => s.text === '◌ AFK — BRB');
+    if (afk) pinStatus(afk);
+    refreshBadgeAdminState();
+  }
+
   // ── Overlay scaffolding ───────────────────────────────────
   function createOverlay() {
     const el = document.createElement('div');
@@ -260,12 +280,15 @@ statusCycler = (function initStatusCycler() {
     const input = overlay.querySelector('#adminPwInput');
     const error = overlay.querySelector('#adminError');
     const modal = overlay.querySelector('.admin-modal');
-    input.focus();
+    // Defer focus past the current keydown so the triggering shortcut's
+    // keypress (e.g. the "L" in Ctrl+Alt+L) doesn't leak into the input.
+    setTimeout(() => { input.value = ''; input.focus(); }, 0);
 
     async function attempt() {
       const ok = await verifyPassword(input.value);
       if (ok) {
         sessionStorage.setItem(AUTH_KEY, '1');
+        refreshBadgeAdminState();
         closeOverlay();
         showAdminPanel();
       } else {
@@ -369,7 +392,7 @@ statusCycler = (function initStatusCycler() {
 
     // Logout
     overlay.querySelector('#panelLogoutBtn').addEventListener('click', () => {
-      sessionStorage.removeItem(AUTH_KEY);
+      logout();
       closeOverlay();
     });
   }
@@ -392,7 +415,7 @@ statusCycler = (function initStatusCycler() {
 
     overlay.querySelector('#goStatusBtn').addEventListener('click', () => { closeOverlay(); showAdminPanel(); });
     overlay.querySelector('#logoutBtn').addEventListener('click', () => {
-      sessionStorage.removeItem(AUTH_KEY);
+      logout();
       closeOverlay();
     });
     overlay.querySelector('#cancelBtn').addEventListener('click', closeOverlay);
